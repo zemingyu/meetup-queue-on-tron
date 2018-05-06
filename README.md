@@ -1,3 +1,5 @@
+# Meetup
+
 # Meetup Queueing System on a Blockchain
 
 A queueing system on the blockchain for meetups
@@ -10,9 +12,23 @@ A queueing system on the blockchain for meetups
 
 # About <a id="chapter-0"></a>
 
-## Discussion Questions
-
-MVP: just build the meetup mechanism to start with
+## To do list
+- [x] Admin rights, create a meetup event
+- [x] Register and deregister user
+- [x] Join and leave an event
+- [x] Add and remove food options, vote for food, find winning food option
+- [x] Implement ERC20 token interface
+- [ ] Reward/ deduct tokens
+- [ ] Last minute auction - allow people to bid for freed up spots
+- [ ] Authenticate users before each event
+- [ ] Insurance pool for tokens penalty
+- [ ] Borrowing/lending tokens
+- [ ] Reward tokens for projects - allow users to submit a github repo
+- [ ] Monthly community voting - to decide which gitub repo to award tokens to
+- [ ] Distribute award tokens based on number of commits
+- [ ] Replace tokens with an ERC20 token (which can only be earned, but not bought)
+- [ ] Web frontend
+- [ ] App
 
 ## Purpose
 
@@ -28,28 +44,43 @@ Most importantly, use this project as an opportunity to learn to write a diverse
 
 [BokkyPooBahs-Ethereum-Workshop](https://www.meetup.com/BokkyPooBahs-Ethereum-Workshop/) has become so popular that the available spots often get fully booked out within a few minutes. Since the meetup is about blockchain, why not solving this problem using blockchain?
 
+## UI design
 
-## Features
-- [x] Admin rights, create a meetup event
-- [x] Register and deregister user
-- [x] Join and leave an event
-- [x] Add and remove food options, vote for food, find winning food option
-- [ ] Last minute auction - allow people to bid for freed up spots
-- [ ] Authenticate users before each event
-- [ ] Reward/ deduct points
-- [ ] Insurance pool for points penalty
-- [ ] Borrowing/lending points
-- [ ] Reward points for projects - allow users to submit a github repo
-- [ ] Monthly community voting - to decide which gitub repo to award points to
-- [ ] Distribute award points based on number of commits
-- [ ] Replace points with an ERC20 token (which can only be earned, but not bought)
-- [ ] Web frontend
-- [ ] App
+- /: list of meetups
+- /meetups/new: form to create a new meetup
+- /meetups/0x1234: meetup details for meetup at address 0x1234
+- /meetups/0x1234/events: event details for meetup at address 0x1234
+- /meetups/0x1234/events/new: form to create a new event for meetup at address 0x1234
+
 
 ## Reasons for using the Ropsten network 
 
 - No transaction cost (ETH can be obtained for free)
 - Low latency if putting a high enough gas price (low latency is important for event entrance and time dependent late cancellations) 
+
+## Token distribution
+
+- 100,000,000 total supply
+- 50% issued to new users
+- 30% community reward pool
+- 10% venture capital investors
+- 10% development team incentive
+
+For the 50% issued to new users, reward early adopters using these multipliers
+- User         1 -       100: 10
+- User       101 -     1,000:  8
+- User     1,001 -    10,000:  5
+- User    10,001 -   100,000:  3
+- User   100,001 - 1,000,000:  2
+- User 1,000,001 -10,000,000:  1
+
+Assuming there are 10m verified unique users
+10*100 + 8*900 + 5*9000 + 3*90000+2*900000 + 1*9000000 = 11,123,200 units
+Total tokens for new users: 50%*1000000 = 50000000
+50000000 / 11123200 = 4.4951 tokens per unit
+Round down to 4 tokens per unit (so keeping 10% as reserve)
+So for user 1 - 100, each is issued 4*10 = 40 tokens
+For user 101-1000, each is issued 4*8 = 32 tokens etc.
 
 
 ## Verification
@@ -77,18 +108,18 @@ Accounts are checked against the masterlist
 - Only registered people are allowed to enter 
 
 ## Point incentives
-#### Earn points (non-event)
-- Every account starts with 100 points 
-- Work on group projects (discretionary, awarded by the meetup owners, maximum 1000 points per month) 
-- Telegram contribution (sharing resources etc.) (discretionary, awarded by the meetup owners, maximum 1000 points per month) 
+#### Earn tokens (non-event)
+- Every unique account starts with 100 tokens 
+- Work on group projects (discretionary, awarded by the meetup owners, maximum 1000 tokens per month) 
+- Telegram contribution (sharing resources etc.) (discretionary, awarded by the meetup owners, maximum 1000 tokens per month) 
 
-#### Earn points (per event)
-- Organise/assistantst: +30 
+#### Earn tokens (per event)
+- Organise/assist: +30 
 - Presenter: +100 
 - Show up: +10 
 
-#### How to lose points
-- To participate in events, need to put in a deposit of 50 points
+#### How to lose tokens
+- To participate in events, need to put in a deposit of 50 tokens
 - no show, no cancellation (or cancellation after event start time): -50
 - late penalty:
   - more than 24 hours before the event: 0 
@@ -103,7 +134,7 @@ Accounts are checked against the masterlist
 
 ## Auction system (replacing the waiting list)
 - Spots freed up in the last 24 hours are available for auctions 
-- Auction the spots with your points
+- Auction the spots with your tokens
 - Auction starts as spots open up
 - Auction ends 1 hour before the meetup
 
@@ -119,7 +150,7 @@ Accounts are checked against the masterlist
 ## Voting
 Vote for
 - Food choice
-- Projects to reward points to
+- Projects to reward tokens to
 - Proposals
 
 ## Smart contract design
@@ -247,8 +278,37 @@ truffle migrate --network development;
 truffle test
 ```
 
-## Production
+
+## 🚀 Front End
+
+#### 1. Clone and Install
+
+_*It's recommended that you install [React Native Debugger](https://github.com/jhen0409/react-native-debugger/releases)._
 
 ```bash
-yarn build
+# Install dependencies
+npm i
 ```
+
+#### 2.1. Run the _React Native_ App
+
+```bash
+# Start the React Native packager
+npm start
+```
+
+Instructions are shown in the terminal. You can select to open it in:
+
+- An emulator (either iOS or Android)
+- Your mobile device with the [Expo app](https://expo.io/). It will reload if you save edits to your files and you will see build errors and logs in the terminal.
+
+#### 2.2. Run the _Web_ App
+
+```bash
+# Starts are local live-reload server at:
+# http://localhost:3001
+npm run web-start
+```
+
+Via webpack, starts a localhost server on port 3001 [http://localhost:3001](http://localhost:3001).
+
