@@ -1,3 +1,4 @@
+// Deploy contract
 var meetupbaseContract = web3.eth.contract([{"constant":true,"inputs":[],"name":"organiserAddress","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"name","type":"bytes32"}],"name":"registerUser","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"users","outputs":[{"name":"userCreateTime","type":"uint64"},{"name":"userAddress","type":"address"},{"name":"userName","type":"bytes32"},{"name":"hasDeregistered","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"meetups","outputs":[{"name":"createTime","type":"uint64"},{"name":"startTime","type":"uint64"},{"name":"maxCapacity","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"unpause","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"name","type":"bytes32"}],"name":"deregisterUser","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getMeetupCount","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_startTime","type":"uint64"},{"name":"_maxCapacity","type":"uint8"}],"name":"createMeetup","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"bytes32"}],"name":"userToAddress","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_newAssistant","type":"address"}],"name":"setAssistant_1","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"pause","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_newOrganiser","type":"address"}],"name":"setOrganiser","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_userName","type":"bytes32"}],"name":"createUser","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"_id","type":"uint256"}],"name":"getUser","outputs":[{"name":"userCreateTime","type":"uint64"},{"name":"userAddress","type":"address"},{"name":"userName","type":"bytes32"},{"name":"hasDeregistered","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"assistantAddress_1","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_newAssistant","type":"address"}],"name":"setAssistant_2","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"assistantAddress_2","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"addressToUser","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"startTime","type":"uint64"},{"indexed":false,"name":"maxCapacity","type":"uint8"}],"name":"MeeupEventCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"userCreateTime","type":"uint64"},{"indexed":false,"name":"userId","type":"uint256"},{"indexed":false,"name":"userName","type":"bytes32"}],"name":"UserCreated","type":"event"}]);
 var meetupbase = meetupbaseContract.new(
    {
@@ -11,5 +12,69 @@ var meetupbase = meetupbaseContract.new(
     }
  })
 
- meetupbase.createUser("A", {from: eth.accounts[0]})
+// Prepare new accounts
+
+personal.newAccount("1234")
+personal.newAccount("1234")
+personal.newAccount("1234")
+personal.newAccount("1234")
+personal.newAccount("1234")
+
+personal.unlockAccount(eth.accounts[1], "1234", 99999)
+personal.unlockAccount(eth.accounts[2], "1234", 99999)
+personal.unlockAccount(eth.accounts[3], "1234", 99999)
+personal.unlockAccount(eth.accounts[4], "1234", 99999)
+personal.unlockAccount(eth.accounts[5], "1234", 99999)
+
+eth.sendTransaction({from: eth.accounts[0], to: eth.accounts[1], value: web3.toWei(1234, "ether")})
+eth.sendTransaction({from: eth.accounts[0], to: eth.accounts[2], value: web3.toWei(1234, "ether")})
+eth.sendTransaction({from: eth.accounts[0], to: eth.accounts[3], value: web3.toWei(1234, "ether")})
+eth.sendTransaction({from: eth.accounts[0], to: eth.accounts[4], value: web3.toWei(1234, "ether")})
+eth.sendTransaction({from: eth.accounts[0], to: eth.accounts[5], value: web3.toWei(1234, "ether")})
+
+
+// create users
+meetupbase.createUser("A", {from: eth.accounts[0], gas:4000000, gasPrice:100})
+meetupbase.createUser("B", {from: eth.accounts[1], gas:4000000, gasPrice:100})
+meetupbase.createUser("C", {from: eth.accounts[2], gas:4000000, gasPrice:100})
+meetupbase.createUser("D", {from: eth.accounts[3], gas:4000000, gasPrice:100})
+meetupbase.createUser("E", {from: eth.accounts[4], gas:4000000, gasPrice:100})
+
+
+// Define utility functions
+// timestamp to string
+function timestampToStr(timestamp) {  
+  timestamp1 = new Date(timestamp*1000);
+  dateStr = timestamp1.toLocaleString();
+  return dateStr;
+}
+
+date = 1525696722;
+timestampToStr(date);
+
+// string to timestamp
+function strToTimestamp(str) {  
+  return new Date(str).getTime() / 1000;
+}
+
+dateTimeStr = "Mon, 07 May 2018 22:38:42 AEST";
+strToTimestamp(dateTimeStr);
+
+
+
+for (i = 0; i < 5; i++) { 
+  console.log(i)
+  console.log("Name: "+web3.toAscii(meetupbase.users(i)[2])+
+            " Creation time: " + timestampToStr(meetupbase.users(i)[0])  +
+            " Address: " + meetupbase.users(i)[1])
+}
+
+dateTimeStr = "Tue, 08 May 2018 22:38:42 AEST";
+strToTimestamp(dateTimeStr);
+
+
+// Not working yet
+meetupbase.getMeetupCount()
+meetupbase.createMeetup(strToTimestamp(dateTimeStr), 100, {from: eth.accounts[0], gas: 4000000, gasPrice:100})
+meetupbase.getMeetupCount()
 
