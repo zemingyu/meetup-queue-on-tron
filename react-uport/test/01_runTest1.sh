@@ -71,6 +71,17 @@ var registerUserMessage = "Register users";
 // -----------------------------------------------------------------------------
 console.log("RESULT: --- " + registerUserMessage + " ---");
 console.log("RESULT: users(0)=" + MeetupBase.users(0));
+console.log("RESULT: users(1)=" + MeetupBase.users(1));
+
+MeetupBase.createUser("A", {from: eth.accounts[0], gas:4000000, gasPrice:100});
+MeetupBase.createUser("B", {from: eth.accounts[1], gas:4000000, gasPrice:100});
+MeetupBase.createUser("C", {from: eth.accounts[2], gas:4000000, gasPrice:100});
+MeetupBase.createUser("D", {from: eth.accounts[3], gas:4000000, gasPrice:100});
+MeetupBase.createUser("E", {from: eth.accounts[4], gas:4000000, gasPrice:100});
+
+console.log("RESULT: users(0)=" + MeetupBase.users(0));
+console.log("RESULT: users(1)=" + MeetupBase.users(1));
+
 
 
 // -----------------------------------------------------------------------------
@@ -122,10 +133,7 @@ var modifyVarssMessage = "Modifying Vars";
 //console.log("RESULT: ");
 
 
-printBalances();
-eth.sendTransaction({from: eth.accounts[0], to: eth.accounts[1], value: web3.toWei(1234, "ether")})
-printBalances();
-eth.sendTransaction({from: eth.accounts[0], to: eth.accounts[2], value: web3.toWei(1234, "ether")})
-printBalances();
+//printBalances();
+//eth.sendTransaction({from: eth.accounts[0], to: eth.accounts[1], value: web3.toWei(1234, "ether")})
 
 EOF
