@@ -7,7 +7,7 @@ CONTRACT=MeetupBase_Simple.sol
 cp ../contracts/$CONTRACT .
 
 # Compile the Solidity file and save the ABI and bytecode into MeetupBase.js
-echo "var MeetupBaseOutput=`solc --optimize --pretty-json --combined-json abi,bin,interface $CONTRACT`;" > MeetupBase.js
+echo "var meetupBaseOutput=`solc --optimize --pretty-json --combined-json abi,bin,interface $CONTRACT`;" > MeetupBase.js
 
 # geth --datadir ./testchain attach << EOF | grep "RESULT: " | sed "s/RESULT: //"
 geth --datadir ./testchain attach << EOF
@@ -23,64 +23,75 @@ unlockAccounts("");
 
 
 // Display some information
-// console.log("RESULT: " + JSON.stringify(MeetupBaseOutput));
+// console.log("RESULT: " + JSON.stringify(meetupBaseOutput));
 
 // Extract the contract ABI
-var MeetupBaseAbi = JSON.parse(MeetupBaseOutput.contracts["$CONTRACT:MeetupBase"].abi);
+var meetupBaseAbi = JSON.parse(meetupBaseOutput.contracts["$CONTRACT:MeetupBase"].abi);
 
 // Extract the contract bytecode
-var MeetupBaseBin = "0x" + MeetupBaseOutput.contracts["$CONTRACT:MeetupBase"].bin;
+var meetupBaseBin = "0x" + meetupBaseOutput.contracts["$CONTRACT:MeetupBase"].bin;
 
 // Display both values
-// console.log("RESULT: MeetupBaseAbi=" + JSON.stringify(MeetupBaseAbi));
-// console.log("RESULT: MeetupBaseBin=" + JSON.stringify(MeetupBaseBin));
+console.log("RESULT: meetupBaseAbi=" + JSON.stringify(meetupBaseAbi));
+console.log("RESULT: meetupBaseBin=" + JSON.stringify(meetupBaseBin));
 
 
 // -----------------------------------------------------------------------------
 var deployMeetupBaseMessage = "Deploy MeetupBase";
 // -----------------------------------------------------------------------------
 console.log("RESULT: --- " + deployMeetupBaseMessage + " ---");
-var MeetupBaseContract = web3.eth.contract(MeetupBaseAbi);
-console.log("RESULT: " + JSON.stringify(MeetupBaseContract));
+var meetupBaseContract = web3.eth.contract(meetupBaseAbi);
+console.log("RESULT: " + JSON.stringify(meetupBaseContract));
 
-var MeetupBaseTx = null;
-var MeetupBaseAddress = null;
-var MeetupBase = MeetupBaseContract.new({from: eth.accounts[0], data: MeetupBaseBin, gas: 4000000},
+var meetupBaseTx = null;
+var meetupBaseAddress = null;
+var meetupBase = meetupBaseContract.new({from: eth.accounts[0], data: meetupBaseBin, gas: 4000000},
   function(e, contract) {
     console.log(e);
     if (!e) {
       if (!contract.address) {
-        MeetupBaseTx = contract.transactionHash;
+        meetupBaseTx = contract.transactionHash;
       } else {
-        MeetupBaseAddress = contract.address;
-        console.log("DATA: MeetupBaseAddress=" + MeetupBaseAddress);
+        meetupBaseAddress = contract.address;
+        console.log("DATA: meetupBaseAddress=" + meetupBaseAddress);
       }
     }
   }
 );
 
+
 // Wait until there are no pending transactions in the txpool
 while (txpool.status.pending > 0) {
 }
 
-console.log("RESULT: balance: " + web3.fromWei(eth.getBalance(eth.accounts[0]), "ether") + " ETH");
-console.log("RESULT: balance: " + web3.fromWei(eth.getBalance(eth.accounts[1]), "ether") + " ETH");
+// console.log("RESULT: meetupBase=" + JSON.stringify(meetupBase));
+// console.log("RESULT: meetupBase=" + JSON.stringify(eth.getTransaction(meetupBaseTx)));
+
+//console.log("RESULT: balance: " + web3.fromWei(eth.getBalance(eth.accounts[0]), "ether") + " ETH");
+//console.log("RESULT: balance: " + web3.fromWei(eth.getBalance(eth.accounts[1]), "ether") + " ETH");
 
 // -----------------------------------------------------------------------------
 var registerUserMessage = "Register users";
 // -----------------------------------------------------------------------------
 console.log("RESULT: --- " + registerUserMessage + " ---");
-console.log("RESULT: users(0)=" + MeetupBase.users(0));
-console.log("RESULT: users(1)=" + MeetupBase.users(1));
+console.log("RESULT: users(0)=" + meetupBase.getUser(0));
+console.log("RESULT: users(1)=" + meetupBase.getUser(1));
 
-MeetupBase.createUser("A", {from: eth.accounts[0], gas:4000000, gasPrice:100});
-MeetupBase.createUser("B", {from: eth.accounts[1], gas:4000000, gasPrice:100});
-MeetupBase.createUser("C", {from: eth.accounts[2], gas:4000000, gasPrice:100});
-MeetupBase.createUser("D", {from: eth.accounts[3], gas:4000000, gasPrice:100});
-MeetupBase.createUser("E", {from: eth.accounts[4], gas:4000000, gasPrice:100});
+console.log("RESULT: users(0)=" + meetupBase.users(0));
+console.log("RESULT: users(1)=" + meetupBase.users(1));
 
-console.log("RESULT: users(0)=" + MeetupBase.users(0));
-console.log("RESULT: users(1)=" + MeetupBase.users(1));
+meetupBase.createUser(web3.fromAscii("A"), {from: eth.accounts[0], gas:700000});
+meetupBase.createUser(web3.fromAscii("B"), {from: eth.accounts[1], gas:700000});
+//meetupBase.createUser("B", {from: eth.accounts[1], gas:4000000});
+//meetupBase.createUser("C", {from: eth.accounts[2], gas:4000000});
+//meetupBase.createUser("D", {from: eth.accounts[3], gas:4000000});
+//meetupBase.createUser("E", {from: eth.accounts[4], gas:4000000});
+
+console.log("RESULT: users(0)=" + meetupBase.getUser(0));
+console.log("RESULT: users(1)=" + meetupBase.getUser(1));
+
+console.log("RESULT: users(0)=" + meetupBase.users(0));
+console.log("RESULT: users(1)=" + meetupBase.users(1));
 
 
 
@@ -88,7 +99,7 @@ console.log("RESULT: users(1)=" + MeetupBase.users(1));
 var checkMeetupMessage = "Check meetups";
 // -----------------------------------------------------------------------------
 console.log("RESULT: --- " + checkMeetupMessage + " ---");
-console.log("RESULT: meetups.length=" + MeetupBase.getMeetupCount())
+console.log("RESULT: meetups.length=" + meetupBase.getMeetupCount())
 
 
 
@@ -108,8 +119,8 @@ console.log("RESULT: meetups.length=" + MeetupBase.getMeetupCount())
 
 
 // Display the values of var1 and var2
-//console.log("RESULT: var1=" + MeetupBase.var1());
-//console.log("RESULT: var2=" + MeetupBase.var2());
+//console.log("RESULT: var1=" + meetupBase.var1());
+//console.log("RESULT: var2=" + meetupBase.var2());
 //console.log("RESULT: ");
 
 // -----------------------------------------------------------------------------

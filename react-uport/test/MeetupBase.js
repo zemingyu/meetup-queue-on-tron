@@ -1,4 +1,4 @@
-var MeetupBaseOutput={
+var meetupBaseOutput={
   "contracts" : 
   {
     "MeetupBase_Simple.sol:MeetupAccessControl" : 
