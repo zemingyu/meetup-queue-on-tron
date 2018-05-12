@@ -1,0 +1,51 @@
+{
+  "name": "Meetup",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./node_modules/react-native-scripts/build/bin/crna-entry.js",
+  "scripts": {
+    "start": "react-native-scripts start",
+    "android": "react-native-scripts android",
+    "ios": "react-native-scripts ios",
+    "test": "node node_modules/jest/bin/jest.js --watch",
+    "web-build-css": "node-sass-chokidar src/ -o src/",
+    "web-watch-css": "npm run web-build-css && node-sass-chokidar src/ -o src/ --watch --recursive",
+    "web-start-js": "react-scripts start",
+    "web-start": "PORT=3001 npm-run-all -p web-watch-css web-start-js",
+    "web-build-js": "react-scripts build",
+    "web-build": "npm-run-all web-build-css web-build-js",
+    "web-test": "react-scripts test --env=jsdom"
+  },
+  "jest": {
+    "preset": "jest-expo"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^6.3.1",
+    "bootstrap": "^4.1.0",
+    "expo": "^26.0.0",
+    "firebase": "^4.13.1",
+    "native-base": "^2.4.2",
+    "node-libs-browser": "^2.1.0",
+    "prop-types": "^15.6.1",
+    "react": "^16.3.2",
+    "react-dom": "^16.3.2",
+    "react-native": "^0.54.2",
+    "react-native-router-flux": "4.0.0-beta.28",
+    "react-redux": "^5.0.7",
+    "react-router-dom": "^4.2.2",
+    "reactstrap": "^5.0.0",
+    "redux": "^4.0.0",
+    "redux-persist": "^5.9.1",
+    "redux-thunk": "^2.2.0",
+    "web3": "^1.0.0-beta.34"
+  },
+  "devDependencies": {
+    "jest-expo": "^26.0.0",
+    "node-sass-chokidar": "^1.2.2",
+    "npm-run-all": "^4.1.2",
+    "react-native-scripts": "1.13.2",
+    "react-scripts": "1.1.1",
+    "react-test-renderer": "16.3.2",
+    "redux-logger": "^3.0.6"
+  }
+}

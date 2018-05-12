@@ -1,0 +1,9 @@
+{
+  "expo": {
+    "sdkVersion": "26.0.0",
+    "name": "Meetup",
+    "slug": "meetup",
+    "icon": "src/images/app-icon.png",
+    "privacy": "public"
+  }
+}
