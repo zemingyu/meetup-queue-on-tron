@@ -82,6 +82,10 @@ console.log("RESULT: users(1)=" + meetupBase.users(1));
 
 meetupBase.createUser(web3.fromAscii("A"), {from: eth.accounts[0], gas:700000});
 meetupBase.createUser(web3.fromAscii("B"), {from: eth.accounts[1], gas:700000});
+
+while (txpool.status.pending > 0) {
+}
+
 //meetupBase.createUser("B", {from: eth.accounts[1], gas:4000000});
 //meetupBase.createUser("C", {from: eth.accounts[2], gas:4000000});
 //meetupBase.createUser("D", {from: eth.accounts[3], gas:4000000});
