@@ -85,7 +85,7 @@ contract MeetupBase is MeetupAccessControl {
 
     // @dev The Creation event is fired whenever a new meetup event comes into existence. 
     //      These meetup events are created by event organiser or assistants 
-    event MeeupEventCreated(uint64 startTime, uint8 maxCapacity);
+    event MeeupEventCreated(uint64 startTime, uint8 maxCapacity, string topic);
     event UserCreated(uint64 userCreateTime, uint256 userId, bytes32 userName);
 
 
@@ -101,13 +101,18 @@ contract MeetupBase is MeetupAccessControl {
         // Capacity of the meeting.
         uint8 maxCapacity;
 
-        // User ID of the presenters.
-        // uint256[] presenters;
+        // Topic of the meeting.
+        string topic;
 
-        // User ID of people who register for the event.
-        // Only the top maxCapacity people will be able to enter.
+
+        // User ID of the presenters.
+        uint256[] presenters;
+
+        // User ID of people who are registered for the event.
+        // Only the top maxCapacity people will be able to attend.
         // The rest will be on the waiting list.
-        // uint256[] registrationList;
+        uint256[] registrationList;
+
 
         // bytes32[] registeredUserNames;
     }
@@ -294,8 +299,9 @@ contract MeetupBase is MeetupAccessControl {
     // @param _food food voted by the creator
     function createMeetup (            
         uint64 _startTime,        
-        uint8 _maxCapacity
-        // uint256[] _presenters
+        uint8 _maxCapacity,
+        string _topic,
+        uint256[] _presenters
         // bytes32 _food
     )
         public
@@ -319,11 +325,12 @@ contract MeetupBase is MeetupAccessControl {
         require(uint64(_startTime) > uint64(now));
 
         // Must have at least 1 extra spot
-        // require(_maxCapacity > _presenters.length);
+        require(_maxCapacity > _presenters.length);
 
-        // // uint256[] memory _registrationList = _presenters;
-        // uint256[] memory _registrationList = new uint256[](_maxCapacity);
-        // // bytes32[] memory _registeredUserNames = new bytes32[](_presenters.length);
+        // uint256[] memory _registrationList = _presenters;
+        uint256[] memory _registrationList = new uint256[](_maxCapacity);
+        // (_maxCapacity);
+        // bytes32[] memory _registeredUserNames = new bytes32[](_presenters.length);
         // bytes32[] memory _registeredUserNames = new bytes32[](_maxCapacity);
 
         // Map address to names
@@ -332,20 +339,25 @@ contract MeetupBase is MeetupAccessControl {
         //     _registeredUserNames[i] = users[_presenters[i]].userName;
         // }        
 
+        // Poulate the initial registration list with presenters
+        for (uint i = 0; i < _presenters.length; i++) {            
+            _registrationList[i] = _presenters[i];
+        }
         
         Meetup memory _meetup = Meetup({            
             createTime: uint64(now),
             startTime: uint64(_startTime),
-            maxCapacity: _maxCapacity
-            // presenters: _presenters,
-            // registrationList: _registrationList,
+            maxCapacity: _maxCapacity,
+            topic: _topic,
+            presenters: _presenters,
+            registrationList: _registrationList
             // registeredUserNames: _registeredUserNames            
         });
 
         uint256 newMeetupId = meetups.push(_meetup) - 1 ;
 
         // emit the meetup event creation event
-        emit MeeupEventCreated(_startTime, _maxCapacity);
+        emit MeeupEventCreated(_startTime, _maxCapacity, _topic);
 
         return newMeetupId;
     }
@@ -367,6 +379,33 @@ contract MeetupBase is MeetupAccessControl {
     //     return foodOptions.length;
     // }
 
+    function getMeetup(uint256 _id)
+        public
+        view
+        returns (
+        uint64 meetupCreateTime,
+        uint64 meetupStartTime, 
+        uint8 meetupMaxCapacity,
+        string meetupTopic,
+        uint256[] meetupPresenters,
+        uint256[] meetupRegistrationList
+        // bytes32[] meetupPresenterNames
+        // bytes32[] meetupRegisteredNames,
+    ) {
+        Meetup storage meetup = meetups[_id];
+
+        meetupCreateTime = meetup.createTime;
+        meetupStartTime = meetup.startTime;
+        meetupMaxCapacity = meetup.maxCapacity;        
+        meetupTopic = meetup.topic;
+        meetupPresenters = meetup.presenters;
+        meetupRegistrationList = meetup.registrationList;
+
+
+        // for (uint i = 0; i < meetupPresenters.length; i++) {            
+        //     meetupPresenterNames[i] = users[meetupPresenters[i]].userName;
+        // }        
+    }
 
     function getUserId() internal view returns (uint256) {
       bool isValidUser = false;
@@ -471,5 +510,8 @@ contract MeetupBase is MeetupAccessControl {
         return meetups.length;
     }
   
+    function getUserCount () public view returns (uint256) {
+        return users.length;
+    }
 
 }

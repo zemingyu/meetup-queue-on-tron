@@ -577,3 +577,35 @@ function generateSummaryJSON() {
   }
   console.log("JSONSUMMARY: }");
 }
+
+
+
+// -----------------------------------------------------------------------------
+// String and timestamp conversion
+// -----------------------------------------------------------------------------
+
+// Define utility functions
+// timestamp to string
+function timestampToStr(timestamp) {  
+  timestamp1 = new Date(timestamp*1000);
+  dateStr = timestamp1.toLocaleString();
+  return dateStr;
+}
+
+// string to timestamp
+function strToTimestamp(str) {  
+  return new Date(str).getTime() / 1000;
+}
+
+dateTimeStr = "Mon, 07 May 2018 22:38:42 AEST";
+strToTimestamp(dateTimeStr);
+
+
+
+for (i = 0; i < 5; i++) { 
+  console.log(i)
+  console.log("Name: "+web3.toAscii(meetupbase.users(i)[2])+
+            " Creation time: " + timestampToStr(meetupbase.users(i)[0])  +
+            " Address: " + meetupbase.users(i)[1])
+}
+
