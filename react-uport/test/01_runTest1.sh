@@ -76,29 +76,35 @@ var registerUserMessage = "Create users";
 console.log("RESULT: --- " + registerUserMessage + " ---");
 console.log("RESULT: Before creating users: users.length=" + meetupBase.getUserCount());
 
-meetupBase.createUser(web3.fromAscii("Organiser"), {from: eth.accounts[0], gas:700000});
-while (txpool.status.pending > 0) {
-}
-meetupBase.createUser(web3.fromAscii("Assistant"), {from: eth.accounts[1], gas:700000});
-while (txpool.status.pending > 0) {
-}
-meetupBase.createUser(web3.fromAscii("Member1"), {from: eth.accounts[2], gas:700000});
-while (txpool.status.pending > 0) {
-}
-meetupBase.createUser(web3.fromAscii("Member2"), {from: eth.accounts[3], gas:700000});
-while (txpool.status.pending > 0) {
-}
-meetupBase.createUser(web3.fromAscii("Member3"), {from: eth.accounts[4], gas:700000});
+meetupBase.createUser(eth.accounts[0], web3.fromAscii("Organiser"), {from: eth.accounts[0], gas:700000});
+meetupBase.createUser(eth.accounts[1], web3.fromAscii("Assistant"), {from: eth.accounts[0], gas:700000});
+meetupBase.createUser(eth.accounts[2], web3.fromAscii("Member1"), {from: eth.accounts[0], gas:700000});
+meetupBase.createUser(eth.accounts[3], web3.fromAscii("Member2"), {from: eth.accounts[0], gas:700000});
+meetupBase.createUser(eth.accounts[4], web3.fromAscii("Member3"), {from: eth.accounts[0], gas:700000});
+meetupBase.createUser(eth.accounts[5], web3.fromAscii("Member4"), {from: eth.accounts[0], gas:700000});
+meetupBase.createUser(eth.accounts[6], web3.fromAscii("Member5"), {from: eth.accounts[0], gas:700000});
+
 while (txpool.status.pending > 0) {
 }
 
 console.log("RESULT: After creating users: users.length=" + meetupBase.getUserCount());
 
+//console.log(meetupBase.getUserData(eth.accounts[0]));
+//console.log(meetupBase.userIndex(0));
+//console.log(meetupBase.getUserData(meetupBase.userIndex(0)));
 
-for (i = 0; i < 5; i++) {   
-  console.log("RESULT: " + i + " | Name: "+web3.toAscii(meetupBase.users(i)[2])+
-            " | Creation Time: " + timestampToStr(meetupBase.users(i)[0])  +
-            " | Address: " + meetupBase.users(i)[1]);
+var userAddress = null;
+
+for (i = 0; i < 6; i++) {     
+  userAddress = meetupBase.userIndex(i);
+
+  console.log("RESULT: " + i + 
+            " | Address: " + userAddress +
+            " | Exists: " + meetupBase.getUserData(userAddress)[0] +
+            " | Index: " + meetupBase.getUserData(userAddress)[1] +
+            " | Name: "+web3.toAscii(meetupBase.getUserData(userAddress)[2])+
+            " | Creation Time: " + timestampToStr(meetupBase.getUserData(userAddress)[3])
+            );
 }
 
 
@@ -114,30 +120,59 @@ strToTimestamp(dateTimeStr);
 
 
 // -----------------------------------------------------------------------------
-var checkMeetupMessage = "Create meetups";
+var createMeetupMessage = "Create a meetup";
 // -----------------------------------------------------------------------------
-console.log("RESULT: --- " + checkMeetupMessage + " ---");
+console.log("RESULT: --- " + createMeetupMessage + " ---");
 console.log("RESULT: Before creating meetups: meetups.length=" + meetupBase.getMeetupCount());
 
-meetupBase.createMeetup(strToTimestamp(dateTimeStr), 100, "Smart contract 101", [3, 4], {from: eth.accounts[0], gas: 4000000});
+meetupBase.createMeetup(strToTimestamp(dateTimeStr), 3, "Smart contract 101", [eth.accounts[3], eth.accounts[4]], {from: eth.accounts[0], gas: 4000000});
 
 while (txpool.status.pending > 0) {
 }
 
 console.log("RESULT: After creating meetups: meetups.length=" + meetupBase.getMeetupCount());
 
-var i = 0;
-console.log("RESULT: Meetup #" + (i+1) + 
-          " | Creation Time: " + timestampToStr(meetupBase.getMeetup(i)[0])  +
-          " | Start Time: " + timestampToStr(meetupBase.getMeetup(i)[1])  +
-          " | Max Capacity: " + meetupBase.getMeetup(i)[2] + 
-          " | Topic: " + meetupBase.getMeetup(i)[3] + 
-          " | Presenter IDs: " + meetupBase.getMeetup(i)[4] +
-          " | Registered User IDs: " + meetupBase.getMeetup(i)[5]);
 
+getMeetupDetails(0);
+
+// Must use getMeetup function to obtain arrays
 
 //printBalances();
 //eth.sendTransaction({from: eth.accounts[0], to: eth.accounts[1], value: web3.toWei(1234, "ether")})
+
+
+// -----------------------------------------------------------------------------
+var registerMessage = "User registers for a meetup event";
+// -----------------------------------------------------------------------------
+console.log("RESULT: --- " + registerMessage + " ---");
+
+meetupBase.registerForMeetup(0, {from: eth.accounts[0], gas: 4000000});
+
+while (txpool.status.pending > 0) {
+}
+
+getMeetupDetails(0);
+
+// -----------------------------------------------------------------------------
+var overRegisterMessage = "Once full, the user cannot register anymore, but can go onto a waiting list";
+// -----------------------------------------------------------------------------
+console.log("RESULT: --- " + overRegisterMessage + " ---");
+
+meetupBase.registerForMeetup(0, {from: eth.accounts[1], gas: 4000000});
+
+while (txpool.status.pending > 0) {
+}
+
+getMeetupDetails(0);
+
+
+// -----------------------------------------------------------------------------
+var checkInMessage = "Check if a user can attend the event";
+// -----------------------------------------------------------------------------
+console.log("RESULT: --- " + checkInMessage + " ---");
+
+console.log("RESULT: Could the user " + eth.accounts[3] + " attend the event? " + meetupBase.checkIn(eth.accounts[3], 0));
+console.log("RESULT: Could the user " + eth.accounts[1] + " attend the event? " + meetupBase.checkIn(eth.accounts[1], 0));
 
 
 EOF

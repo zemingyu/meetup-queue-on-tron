@@ -77,6 +77,25 @@ contract MeetupAccessControl {
       paused = false;
   }
 
+
+  // Safe maths
+  function add(uint a, uint b) internal pure returns (uint c) {
+        c = a + b;
+        require(c >= a);
+    }
+  function sub(uint a, uint b) internal pure returns (uint c) {
+      require(b <= a);
+      c = a - b;
+  }
+  function mul(uint a, uint b) internal pure returns (uint c) {
+      c = a * b;
+      require(a == 0 || c / a == b);
+  }
+  function div(uint a, uint b) internal pure returns (uint c) {
+      require(b > 0);
+      c = a / b;
+}
+
 }
 
 
@@ -85,44 +104,55 @@ contract MeetupBase is MeetupAccessControl {
 
     // @dev The Creation event is fired whenever a new meetup event comes into existence. 
     //      These meetup events are created by event organiser or assistants 
-    event MeeupEventCreated(uint64 startTime, uint8 maxCapacity, string topic);
-    event UserCreated(uint64 userCreateTime, uint256 userId, bytes32 userName);
+    event MeeupEventCreated(uint _startTime, uint _maxCapacity, uint _remainingCapacity, string _topic);
+    event UserCreated(uint _userId, address _address,  bytes32 _userName, uint userCreateTime);
+    event MeetupEventUpdated(uint _startTime, uint _maxCapacity, uint _remainingCapacity, string _topic, uint _waitingListLength);
 
 
     // /*** DATA TYPES ***/
 
     struct Meetup {
         // The timestamp from the block when the meetup event is created.
-        uint64 createTime;
+        uint createTime;
 
         // The timestamp from the block when the meetup event is scheduled to start.
-        uint64 startTime;
+        uint startTime;
 
         // Capacity of the meeting.
-        uint8 maxCapacity;
+        uint maxCapacity;
+
+        // Remaining capacity of the meetup event
+        uint remainingCapacity;
 
         // Topic of the meeting.
         string topic;
 
+        // Address of the presenters.
+        address[] presenters;
 
-        // User ID of the presenters.
-        uint256[] presenters;
-
-        // User ID of people who are registered for the event.
+        // Addresses of users who are registered for the event.
         // Only the top maxCapacity people will be able to attend.
         // The rest will be on the waiting list.
-        uint256[] registrationList;
+        address[] registrationList;
 
+        // Addresses of users who are on the waiting list
+        // Later, when some registered user cancel their spot,
+        // the top N users on this list will be registered 
+        // The ranking is based on a bidding process
+        address[] waitingList;
 
         // bytes32[] registeredUserNames;
     }
 
     struct User {
-        uint64 userCreateTime;
-        address userAddress;
-        bytes32 userName;
-        // uint256 userPoints;
-        bool hasDeregistered;                
+        bool exists;
+        uint index;
+        bytes32 name;
+        uint userCreateTime;
+        // address userAddress;
+        // bytes32 userName;
+        // uint userPoints;
+        // bool hasDeregistered;            
     }
 
     /*** STORAGE ***/
@@ -130,20 +160,22 @@ contract MeetupBase is MeetupAccessControl {
     /// @dev An array containing the Meetup struct for all Meetups in existence. 
     Meetup[] public meetups;
 
-    User[] public users;
+    // User[] public users;
+    mapping(address => User) userEntries;
+    address[] public userIndex;
 
     /// @dev A mapping from user address to points
-    // mapping (address => uint256) public addressToPoints;
+    // mapping (address => uint) public addressToPoints;
 
     // Here we store the names. Make it public to automatically generate an
     // accessor function named 'users' that takes a fixed-length string as argument.
-    mapping (bytes32 => address) public userToAddress;
-    mapping (address => bytes32) public addressToUser;
+    // mapping (bytes32 => address) public userToAddress;
+    // mapping (address => bytes32) public addressToUser;
 
     // /// @dev An array containing food options
     // bytes32[] public foodOptions;
     // // Mapping from food name to number of votes
-    // mapping (bytes32 => uint8) public foodToVotes;
+    // mapping (bytes32 => uint) public foodToVotes;
 
 
 
@@ -157,80 +189,83 @@ contract MeetupBase is MeetupAccessControl {
         // foodOptions = [bytes32("nothing"), "pizza", "sushi", "salad", "burito", "subway"];
     }
 
-
-    function createUser(bytes32 _userName) public returns (uint256) {
-        require(msg.sender != 0 && _userName != "");
+   
+    function createUser(address _address, bytes32 _userName) public onlyAssistant {
+        require(!userEntries[_address].exists);
+        userIndex.push(_address);
 
         User memory _user = User({
-            userCreateTime: uint64(now),
-            userAddress: msg.sender,
-            userName: _userName,
-            // userPoints: 100,
-            hasDeregistered: false  
+          exists: true,
+          index: userIndex.length - 1,
+          name: _userName,
+          userCreateTime: uint(now)
         });
 
-        uint256 userId = users.push(_user) - 1 ;
-        emit UserCreated(uint64(now), userId, _userName);
-        return userId;
+        userEntries[_address] = _user;
+
+        emit UserCreated(userIndex.length - 1, _address, _userName, uint(now));        
     }
 
-    // function deregisterUser(uint256 _id) public returns (bool) {
+    // function deregisterUser(uint _id) public returns (bool) {
     //     require(users[_id].userAddress == msg.sender);        
     //     users[_id].hasDeregistered = true;
     // }
 
-    /// @notice Returns all the relevant information about a specific user.
-    /// @param _id The ID of the user of interest.
-    function getUser(uint256 _id)
-        public
-        view
-        returns (
-        uint64 userCreateTime,
-        address userAddress,
-        bytes32 userName,
-        // uint256 userPoints,
-        bool hasDeregistered
-    ) {
-        User storage user = users[_id];
-        
-        userCreateTime = user.userCreateTime;
-        userAddress = user.userAddress;
-        userName = user.userName;
-        // userPoints = user.userPoints;
-        hasDeregistered = user.hasDeregistered;        
+    function getUserData(address _address) public view returns (bool _exists, uint _index, bytes32 _name, uint userCreateTime) {
+        User memory user = userEntries[_address];
+        return (user.exists, user.index, user.name, user.userCreateTime);
     }
+    /// @notice Returns all the relevant information about a specific user.    
+    // function getUser(uint _id)
+    //     public
+    //     view
+    //     returns (
+    //     uint userCreateTime,
+    //     address userAddress,
+    //     bytes32 userName,
+    //     // uint userPoints,
+    //     bool hasDeregistered
+    // ) {
+    //     User storage user = users[_id];
+        
+    //     userCreateTime = user.userCreateTime;
+    //     userAddress = user.userAddress;
+    //     userName = user.userName;
+    //     // userPoints = user.userPoints;
+    //     hasDeregistered = user.hasDeregistered;        
+    // }
 
     // Register the provided name with the caller address.
     // Also, we don't want them to register "" as their name.
-    function registerUser(bytes32 name) public {
-        // require(
-        //     msg.sender == userToAddress[name] ||
-        //     msg.sender == organiserAddress ||
-        //     msg.sender == assistantAddress_1 ||
-        //     msg.sender == assistantAddress_2
-        // );
+    // function registerUser(bytes32 name) public {
+    //     // require(
+    //     //     msg.sender == userToAddress[name] ||
+    //     //     msg.sender == organiserAddress ||
+    //     //     msg.sender == assistantAddress_1 ||
+    //     //     msg.sender == assistantAddress_2
+    //     // );
         
-        if(userToAddress[name] == 0 && name != ""){
-            addressToUser[msg.sender] = name;
-            userToAddress[name] = msg.sender;            
-            // addressToPoints[msg.sender] = 100;
-        }
-    }
+    //     if(userToAddress[name] == 0 && name != ""){
+    //         addressToUser[msg.sender] = name;
+    //         userToAddress[name] = msg.sender;            
+    //         // addressToPoints[msg.sender] = 100;
+    //     }
+    // }
 
-    // Deregister the provided name with the caller address.
-    // Only user him/herself or assistants can deregister a user
-    function deregisterUser(bytes32 name) public onlyAssistant {        
-        // require(
-        //     msg.sender == users[name] ||
-        //     msg.sender == organiserAddress ||
-        //     msg.sender == assistantAddress_1 ||
-        //     msg.sender == assistantAddress_2
-        // );
-        if(userToAddress[name] != 0 && name != ""){
-            addressToUser[msg.sender] = "";
-            userToAddress[name] = 0x0;
-        }
-    }
+    // // Deregister the provided name with the caller address.
+    // // Only user him/herself or assistants can deregister a user
+    // function deregisterUser(bytes32 name) public onlyAssistant {        
+    //     // require(
+    //     //     msg.sender == users[name] ||
+    //     //     msg.sender == organiserAddress ||
+    //     //     msg.sender == assistantAddress_1 ||
+    //     //     msg.sender == assistantAddress_2
+    //     // );
+    //     if(userToAddress[name] != 0 && name != ""){
+    //         addressToUser[msg.sender] = "";
+    //         userToAddress[name] = 0x0;
+    //     }
+    // }
 
   //   function addFoodOption(bytes32 _food) public onlyAssistant {
   //       require(_food != '');
@@ -298,15 +333,15 @@ contract MeetupBase is MeetupAccessControl {
     // @param _presenters Addresses of presenters.
     // @param _food food voted by the creator
     function createMeetup (            
-        uint64 _startTime,        
-        uint8 _maxCapacity,
+        uint _startTime,        
+        uint _maxCapacity,
         string _topic,
-        uint256[] _presenters
+        address[] _presenters
         // bytes32 _food
     )
         public
-        onlyAssistant() 
-        returns (uint256)
+        onlyAssistant
+        returns (uint)
     {
         // // Check if the food option is valid
         // bool isValidFood = false;
@@ -322,13 +357,14 @@ contract MeetupBase is MeetupAccessControl {
 
 
         // Can't create a meetup in the past
-        require(uint64(_startTime) > uint64(now));
+        require(uint(_startTime) > uint(now));
 
         // Must have at least 1 extra spot
         require(_maxCapacity > _presenters.length);
 
-        // uint256[] memory _registrationList = _presenters;
-        uint256[] memory _registrationList = new uint256[](_maxCapacity);
+        // uint[] memory _registrationList = _presenters;
+        address[] memory _registrationList = new address[](_maxCapacity);
+        address[] memory _waitingList = new address[](0);
         // (_maxCapacity);
         // bytes32[] memory _registeredUserNames = new bytes32[](_presenters.length);
         // bytes32[] memory _registeredUserNames = new bytes32[](_maxCapacity);
@@ -344,30 +380,34 @@ contract MeetupBase is MeetupAccessControl {
             _registrationList[i] = _presenters[i];
         }
         
+        uint _remainingCapacity = sub(_maxCapacity, _presenters.length);
+
         Meetup memory _meetup = Meetup({            
-            createTime: uint64(now),
-            startTime: uint64(_startTime),
+            createTime: uint(now),
+            startTime: uint(_startTime),
             maxCapacity: _maxCapacity,
             topic: _topic,
             presenters: _presenters,
-            registrationList: _registrationList
+            registrationList: _registrationList,
+            remainingCapacity: _remainingCapacity,
+            waitingList: _waitingList
             // registeredUserNames: _registeredUserNames            
         });
 
-        uint256 newMeetupId = meetups.push(_meetup) - 1 ;
+        uint newMeetupId = meetups.push(_meetup) - 1 ;
 
         // emit the meetup event creation event
-        emit MeeupEventCreated(_startTime, _maxCapacity, _topic);
+        emit MeeupEventCreated(_startTime, _maxCapacity, _remainingCapacity, _topic);
 
         return newMeetupId;
     }
 
 
-//   function getPresenters(uint i) public view returns (uint256[]){
+//   function getPresenters(uint i) public view returns (uint[]){
 //     return meetups[i].presenters;
 //   }
 
-    // function getRegistrationList(uint i) public view returns (uint256[]){
+    // function getRegistrationList(uint i) public view returns (uint[]){
     //     return meetups[i].registrationList;
     // }
 
@@ -375,20 +415,22 @@ contract MeetupBase is MeetupAccessControl {
     //     return meetups[i].registeredUserNames;
     // }
 
-    // function getFoodOptionCount() public view returns (uint256) {
+    // function getFoodOptionCount() public view returns (uint) {
     //     return foodOptions.length;
     // }
 
-    function getMeetup(uint256 _id)
+    function getMeetup(uint _id)
         public
         view
         returns (
-        uint64 meetupCreateTime,
-        uint64 meetupStartTime, 
-        uint8 meetupMaxCapacity,
+        uint meetupCreateTime,
+        uint meetupStartTime, 
+        uint meetupMaxCapacity,
+        uint remainingCapacity,
         string meetupTopic,
-        uint256[] meetupPresenters,
-        uint256[] meetupRegistrationList
+        address[] meetupPresenters,
+        address[] meetupRegistrationList,
+        address[] meetupWaitingList
         // bytes32[] meetupPresenterNames
         // bytes32[] meetupRegisteredNames,
     ) {
@@ -400,6 +442,8 @@ contract MeetupBase is MeetupAccessControl {
         meetupTopic = meetup.topic;
         meetupPresenters = meetup.presenters;
         meetupRegistrationList = meetup.registrationList;
+        remainingCapacity = meetup.remainingCapacity;
+        meetupWaitingList = meetup.waitingList;
 
 
         // for (uint i = 0; i < meetupPresenters.length; i++) {            
@@ -407,65 +451,85 @@ contract MeetupBase is MeetupAccessControl {
         // }        
     }
 
-    function getUserId() internal view returns (uint256) {
-      bool isValidUser = false;
-      uint256 userId;
-      for (uint i = 0; i < users.length; i++) {
-        if (users[i].userAddress == msg.sender && 
-          users[i].hasDeregistered == false) {
-          isValidUser = true;
-          userId = i;
-        }
-      }  
-      require(isValidUser);
+    // function getUserId() internal view returns (uint) {
+    //   bool isValidUser = false;
+    //   uint userId;
+    //   for (uint i = 0; i < users.length; i++) {
+    //     if (users[i].userAddress == msg.sender && 
+    //       users[i].hasDeregistered == false) {
+    //       isValidUser = true;
+    //       userId = i;
+    //     }
+    //   }  
+    //   require(isValidUser);
 
-      return userId;
-    }
-    
-    // // function joinNextMeetup(bytes32 _food)
-    // function joinNextMeetup()
-    //     public                
-    //     // returns (bool)
-    // {
-    //     // require(userToAddress[_userName] == msg.sender);
-    //     // require(userToAddress[_userName] != address(0));        
-    //     // require(addressToUser[msg.sender] > 0);        
-    //     uint256 _userId = getUserId();
-
-    //     // Check if the food option is valid
-    //     // bool isValidFood = false;
-    //     // require(_food != '');
-    //     // for (uint j = 0; j < foodOptions.length; j++) {
-    //     //     if (foodOptions[j] == _food) {
-    //     //         isValidFood = true;
-    //     //     }
-    //     // }
-    //     // require(isValidFood);
-
-    //     // foodToVotes[_food] += 1;
-
-    //     uint256 _meetupId = meetups.length - 1;
-    //     Meetup storage _meetup = meetups[_meetupId];
-
-    //     // Can't join a meetup that has already started.
-    //     require(now < _meetup.startTime);        
-
-    //     // Can't join twice
-    //     for (uint i = 0; i < _meetup.registrationList.length; i++) {
-    //         if (_meetup.registrationList[i] == _userId) {
-    //             revert();
-    //         }
-    //     }      
-
-    //     // bytes32 _userName = addressToUser[msg.sender];
-    //     bytes32 _userName = users[_userId].userName;
-    //     _meetup.registrationList.push(_userId);
-    //     _meetup.registeredUserNames.push(_userName);
-
-    //     // deduct deposit
-    //     // addressToPoints[msg.sender] = addressToPoints[msg.sender] - 50;
-
+    //   return userId;
     // }
+
+    // function joinNextMeetup(bytes32 _food)
+    function registerForMeetup(uint _meetupId)
+        public                
+        // returns (bool)
+    {
+        require(userEntries[msg.sender].exists);
+        
+        // Check if the food option is valid
+        // bool isValidFood = false;
+        // require(_food != '');
+        // for (uint j = 0; j < foodOptions.length; j++) {
+        //     if (foodOptions[j] == _food) {
+        //         isValidFood = true;
+        //     }
+        // }
+        // require(isValidFood);
+
+        // foodToVotes[_food] += 1;
+
+        // uint _meetupId = meetups.length - 1;
+        Meetup storage _meetup = meetups[_meetupId];
+
+        // Can't join a meetup that has already started.
+        require(now < _meetup.startTime);
+
+        uint occupiedCapacity = sub(_meetup.maxCapacity, _meetup.remainingCapacity);
+
+        // Can't join twice
+        for (uint i = 0; i < occupiedCapacity; i++) {
+            if (_meetup.registrationList[i] == msg.sender) {
+                revert();
+            }
+        }
+
+        for (i = 0; i < _meetup.waitingList.length; i++) {
+            if (_meetup.waitingList[i] == msg.sender) {
+                revert();
+            }
+        }      
+
+        // Check if there is any capacity remaining
+        if (_meetup.remainingCapacity > 0) {
+          // Register user for the meetup event 
+          _meetup.registrationList[occupiedCapacity] = msg.sender;
+
+          // Reduce the capacity by 1
+          _meetup.remainingCapacity = sub(_meetup.remainingCapacity, 1);
+
+        } else {
+
+          // If there is no capacity remaining, join the waiting list
+          _meetup.waitingList.push(msg.sender);
+
+        }
+
+
+        // Broadcast the updated event data
+        emit MeetupEventUpdated(_meetup.startTime, _meetup.maxCapacity, 
+          _meetup.remainingCapacity, _meetup.topic, _meetup.waitingList.length);
+
+        // deduct deposit
+        // addressToPoints[msg.sender] = addressToPoints[msg.sender] - 50;
+
+    }
 
     // function leaveNextMeetup ()
     //     public           
@@ -476,9 +540,9 @@ contract MeetupBase is MeetupAccessControl {
 
     //     // Have to be a registered user
     //     // require(addressToUser[msg.sender] > 0);        
-    //     uint256 _userId = getUserId();
+    //     uint _userId = getUserId();
 
-    //     uint256 _meetupId = meetups.length - 1;
+    //     uint _meetupId = meetups.length - 1;
     //     Meetup storage _meetup = meetups[_meetupId];
 
     //     // Have to be registered to leave
@@ -506,12 +570,29 @@ contract MeetupBase is MeetupAccessControl {
     //     require(hasJoined);
     // }
 
-    function getMeetupCount () public view returns (uint256) {
-        return meetups.length;
+    function getMeetupCount () public view returns (uint) {
+      return meetups.length;
     }
   
-    function getUserCount () public view returns (uint256) {
-        return users.length;
+    function getUserCount () public view returns (uint) {
+      return userIndex.length;
     }
 
+    function checkIn (address _address, uint _meetupId) public view returns (bool) {
+      require(userEntries[_address].exists);
+
+      bool canAttend = false;
+
+      Meetup memory _meetup = meetups[_meetupId];
+
+      uint occupiedCapacity = sub(_meetup.maxCapacity, _meetup.remainingCapacity);
+
+      for (uint i = 0; i < occupiedCapacity; i++) {
+          if (_meetup.registrationList[i] == _address) {
+              canAttend = true;
+          }
+      }
+
+      return canAttend;
+    }
 }

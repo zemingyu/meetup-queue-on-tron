@@ -597,15 +597,18 @@ function strToTimestamp(str) {
   return new Date(str).getTime() / 1000;
 }
 
-dateTimeStr = "Mon, 07 May 2018 22:38:42 AEST";
-strToTimestamp(dateTimeStr);
-
-
-
-for (i = 0; i < 5; i++) { 
-  console.log(i)
-  console.log("Name: "+web3.toAscii(meetupbase.users(i)[2])+
-            " Creation time: " + timestampToStr(meetupbase.users(i)[0])  +
-            " Address: " + meetupbase.users(i)[1])
+// Print out meetup details
+function getMeetupDetails(i) {
+  console.log("RESULT: Meetup #" + (i+1) + 
+          " | Creation Time: " + timestampToStr(meetupBase.getMeetup(i)[0])  +
+          " | Start Time: " + timestampToStr(meetupBase.getMeetup(i)[1])  +
+          " | Max Capacity: " + meetupBase.getMeetup(i)[2] + 
+          " | Remaining Capacity: " + meetupBase.getMeetup(i)[3] + 
+          " | Topic: " + meetupBase.getMeetup(i)[4] + 
+          " | Presenter Addresses: " + meetupBase.getMeetup(i)[5] +
+          " | Registered User Addresses: " + meetupBase.getMeetup(i)[6] + 
+          " | Waiting List User Addresses: " + meetupBase.getMeetup(i)[7]);
 }
+
+
 

@@ -12,33 +12,21 @@ A queueing system on the blockchain for meetups
 
 # About <a id="chapter-0"></a>
 
-## To do list
+## Solidity to do list
 - [x] Admin rights, create a meetup event
-- [x] Register and deregister user
-- [x] Join and leave an event
-- [x] Add and remove food options, vote for food, find winning food option
-- [x] Implement ERC20 token interface
-- [ ] Reward/ deduct tokens
-- [ ] Last minute auction - allow people to bid for freed up spots
-- [ ] Authenticate users before each event
-- [ ] Insurance pool for tokens penalty
-- [ ] Borrowing/lending tokens
-- [ ] Reward tokens for projects - allow users to submit a github repo
-- [ ] Monthly community voting - to decide which gitub repo to award tokens to
-- [ ] Distribute award tokens based on number of commits
-- [ ] Replace tokens with an ERC20 token (which can only be earned, but not bought)
-- [ ] Web frontend
-- [ ] App
+- [x] Create a user
+- [x] Register a user to a meetup event if there is capacity
+- [x] Join the waiting list if there is no capacity
+- [x] Check in at the gate before the start of the meetup event - check if the user can attend
+- [ ] Remove a user
+- [ ] Remove a a meetup event
+- [ ] Allow people on the waiting list to bid for open spots from cancellations
+- [ ] Cancel from the registered list
+- [ ] Add and remove food options, vote for food, find winning food option
 
 ## Purpose
 
-To allocate meetup spots in a fully transparent manner using smart contracts the ethereum blockchain 
-
-Reward people for regular attendance and contribution 
-
-Penalise people for late cancellation and no show's
-
-Most importantly, use this project as an opportunity to learn to write a diverse range of smart contracts
+This is an MVP of the [meetup-queue](https://github.com/zemingyu/meetup-queue) repo.
 
 ## Background
 
@@ -170,17 +158,6 @@ Vote for
 - Date and time 
 - Maximum capacity 
 - Late cancellation period
-
-####  Functions
-
-- Register user
-- Deregister user
-- Create a new meetup event – ownly organiser and assistants can do this
-- Cancel a meetup event – ownly organiser and assistants can do this
-- Register for a meetup event
-- Deregister from a meetup event
-- Enter into last minute auction
-
 
 
 ## Boilderplate
