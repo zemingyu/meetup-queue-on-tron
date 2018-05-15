@@ -45,7 +45,7 @@ var meetupBaseContract = web3.eth.contract(meetupBaseAbi);
 
 var meetupBaseTx = null;
 var meetupBaseAddress = null;
-var meetupBase = meetupBaseContract.new({from: eth.accounts[0], data: meetupBaseBin, gas: 4000000},
+var meetupBase = meetupBaseContract.new({from: eth.accounts[1], data: meetupBaseBin, gas: 4000000},
   function(e, contract) {
     console.log(e);
     if (!e) {
@@ -66,7 +66,7 @@ while (txpool.status.pending > 0) {
 // console.log("RESULT: meetupBase=" + JSON.stringify(meetupBase));
 // console.log("RESULT: meetupBase=" + JSON.stringify(eth.getTransaction(meetupBaseTx)));
 
-//console.log("RESULT: balance: " + web3.fromWei(eth.getBalance(eth.accounts[0]), "ether") + " ETH");
+//console.log("RESULT: balance: " + web3.fromWei(eth.getBalance(eth.accounts[1]), "ether") + " ETH");
 //console.log("RESULT: balance: " + web3.fromWei(eth.getBalance(eth.accounts[1]), "ether") + " ETH");
 
 
@@ -76,37 +76,27 @@ var registerUserMessage = "Create users";
 console.log("RESULT: --- " + registerUserMessage + " ---");
 console.log("RESULT: Before creating users: users.length=" + meetupBase.getUserCount());
 
-meetupBase.createUser(eth.accounts[0], web3.fromAscii("Organiser"), {from: eth.accounts[0], gas:700000});
-meetupBase.createUser(eth.accounts[1], web3.fromAscii("Assistant"), {from: eth.accounts[0], gas:700000});
-meetupBase.createUser(eth.accounts[2], web3.fromAscii("Member1"), {from: eth.accounts[0], gas:700000});
-meetupBase.createUser(eth.accounts[3], web3.fromAscii("Member2"), {from: eth.accounts[0], gas:700000});
-meetupBase.createUser(eth.accounts[4], web3.fromAscii("Member3"), {from: eth.accounts[0], gas:700000});
-meetupBase.createUser(eth.accounts[5], web3.fromAscii("Member4"), {from: eth.accounts[0], gas:700000});
-meetupBase.createUser(eth.accounts[6], web3.fromAscii("Member5"), {from: eth.accounts[0], gas:700000});
+meetupBase.createUser(eth.accounts[1], web3.fromAscii("Organiser"), {from: eth.accounts[1], gas:700000});
+meetupBase.createUser(eth.accounts[2], web3.fromAscii("Assistant"), {from: eth.accounts[1], gas:700000});
+meetupBase.createUser(eth.accounts[3], web3.fromAscii("Member1"), {from: eth.accounts[1], gas:700000});
+meetupBase.createUser(eth.accounts[4], web3.fromAscii("Member2"), {from: eth.accounts[1], gas:700000});
+meetupBase.createUser(eth.accounts[5], web3.fromAscii("Member3"), {from: eth.accounts[1], gas:700000});
+meetupBase.createUser(eth.accounts[6], web3.fromAscii("Member4"), {from: eth.accounts[1], gas:700000});
+meetupBase.createUser(eth.accounts[7], web3.fromAscii("Member5"), {from: eth.accounts[1], gas:700000});
 
 while (txpool.status.pending > 0) {
 }
 
 console.log("RESULT: After creating users: users.length=" + meetupBase.getUserCount());
 
-//console.log(meetupBase.getUserData(eth.accounts[0]));
+//console.log(meetupBase.getUserData(eth.accounts[1]));
 //console.log(meetupBase.userIndex(0));
 //console.log(meetupBase.getUserData(meetupBase.userIndex(0)));
 
 var userAddress = null;
+printUsers()
 
-for (i = 0; i < 6; i++) {     
-  userAddress = meetupBase.userIndex(i);
-
-  console.log("RESULT: " + i + 
-            " | Address: " + userAddress +
-            " | Exists: " + meetupBase.getUserData(userAddress)[0] +
-            " | Index: " + meetupBase.getUserData(userAddress)[1] +
-            " | Name: "+web3.toAscii(meetupBase.getUserData(userAddress)[2])+
-            " | Creation Time: " + timestampToStr(meetupBase.getUserData(userAddress)[3])
-            );
-}
-
+printBalances();
 
 // -----------------------------------------------------------------------------
 var testDatesMessage = "Test dates";
@@ -116,64 +106,101 @@ console.log("RESULT: --- " + testDatesMessage + " ---");
 date = 1525696722;
 timestampToStr(date);
 dateTimeStr = "Wed, 01 Aug 2018 18:00:00 AEST";
+dateTimeStrPast = "Tue, 15 May 2018 09:36:00 AEST";
 strToTimestamp(dateTimeStr);
 
-
 // -----------------------------------------------------------------------------
-var createMeetupMessage = "Create a meetup";
+var createMeetupMessage = "Create a meetup and register account 3 and 4 as presenters";
 // -----------------------------------------------------------------------------
 console.log("RESULT: --- " + createMeetupMessage + " ---");
 console.log("RESULT: Before creating meetups: meetups.length=" + meetupBase.getMeetupCount());
 
-meetupBase.createMeetup(strToTimestamp(dateTimeStr), 3, "Smart contract 101", [eth.accounts[3], eth.accounts[4]], {from: eth.accounts[0], gas: 4000000});
+
+var txFutureEvent = meetupBase.createMeetup(strToTimestamp(dateTimeStr), 3, "Smart contract 101", [eth.accounts[3], eth.accounts[4]], {from: eth.accounts[1], gas: 4000000});
+var txPastEvent = meetupBase.createMeetup(strToTimestamp(dateTimeStrPast), 3, "Smart contract 101", [eth.accounts[3], eth.accounts[4]], {from: eth.accounts[1], gas: 4000000});
 
 while (txpool.status.pending > 0) {
 }
+
+// Must use getMeetup function to obtain arrays
+//eth.sendTransaction({from: eth.accounts[1], to: eth.accounts[1], value: web3.toWei(1234, "ether")})
+
+
+failIfTxStatusError(txFutureEvent, " - it can create a meetup in the future - Expecting success");
+passIfTxStatusError(txPastEvent, " - it cannot create a meetup in the past - Expecting failure");
+
 
 console.log("RESULT: After creating meetups: meetups.length=" + meetupBase.getMeetupCount());
 
-
 getMeetupDetails(0);
 
-// Must use getMeetup function to obtain arrays
-
-//printBalances();
-//eth.sendTransaction({from: eth.accounts[0], to: eth.accounts[1], value: web3.toWei(1234, "ether")})
-
+printBalances();
 
 // -----------------------------------------------------------------------------
-var registerMessage = "User registers for a meetup event";
+var registerMessage = "User can register for a meetup event - account 5";
 // -----------------------------------------------------------------------------
 console.log("RESULT: --- " + registerMessage + " ---");
 
-meetupBase.registerForMeetup(0, {from: eth.accounts[0], gas: 4000000});
+meetupBase.registerForMeetup(0, {from: eth.accounts[5], gas: 4000000});
 
 while (txpool.status.pending > 0) {
 }
 
 getMeetupDetails(0);
 
+printBalances();
+
 // -----------------------------------------------------------------------------
-var overRegisterMessage = "Once full, the user cannot register anymore, but can go onto a waiting list";
+var overRegisterMessage = "Once full, the user cannot register anymore, but can go onto a waiting list - account 6";
 // -----------------------------------------------------------------------------
 console.log("RESULT: --- " + overRegisterMessage + " ---");
 
-meetupBase.registerForMeetup(0, {from: eth.accounts[1], gas: 4000000});
+meetupBase.registerForMeetup(0, {from: eth.accounts[6], gas: 4000000});
 
 while (txpool.status.pending > 0) {
 }
 
 getMeetupDetails(0);
 
+printBalances();
 
 // -----------------------------------------------------------------------------
 var checkInMessage = "Check if a user can attend the event";
 // -----------------------------------------------------------------------------
 console.log("RESULT: --- " + checkInMessage + " ---");
 
-console.log("RESULT: Could the user " + eth.accounts[3] + " attend the event? " + meetupBase.checkIn(eth.accounts[3], 0));
-console.log("RESULT: Could the user " + eth.accounts[1] + " attend the event? " + meetupBase.checkIn(eth.accounts[1], 0));
+for (i = 2; i < 7; i++) {
+  console.log("RESULT: User " + eth.accounts[i] + " can attend the event? " + meetupBase.checkIn(eth.accounts[i], 0));  
+}
 
+printBalances();
+
+
+// -----------------------------------------------------------------------------
+var removeUserMessage = "Remove account 2 as a user";
+// -----------------------------------------------------------------------------
+console.log("RESULT: --- " + removeUserMessage + " ---");
+console.log("RESULT: Before removing user: users.length=" + meetupBase.getUserCount());
+
+printUsers()
+
+meetupBase.removeUser(eth.accounts[2], {from: eth.accounts[1], gas: 4000000});
+
+while (txpool.status.pending > 0) {
+}
+
+console.log("RESULT: After removing user: users.length=" + meetupBase.getUserCount());
+
+printUsers()
+
+// -----------------------------------------------------------------------------
+var deregisterForEventMessage = "User deregisteres for an event - if on registration list, move one person from the waiting list";
+// -----------------------------------------------------------------------------
+
+
+
+
+printBalances();
 
 EOF
 

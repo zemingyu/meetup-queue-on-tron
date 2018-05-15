@@ -106,6 +106,7 @@ contract MeetupBase is MeetupAccessControl {
     //      These meetup events are created by event organiser or assistants 
     event MeeupEventCreated(uint _startTime, uint _maxCapacity, uint _remainingCapacity, string _topic);
     event UserCreated(uint _userId, address _address,  bytes32 _userName, uint userCreateTime);
+    event UserRemoved(uint _removeIndex, address _address, bytes32 userName, uint removalTime);
     event MeetupEventUpdated(uint _startTime, uint _maxCapacity, uint _remainingCapacity, string _topic, uint _waitingListLength);
 
 
@@ -205,6 +206,21 @@ contract MeetupBase is MeetupAccessControl {
 
         emit UserCreated(userIndex.length - 1, _address, _userName, uint(now));        
     }
+
+    function removeUser(address _address) public onlyAssistant {
+        require(userEntries[_address].exists);
+        uint removeIndex = userEntries[_address].index;
+        emit UserRemoved(removeIndex, _address, userEntries[_address].name, uint(now));
+        uint lastIndex = userIndex.length - 1;
+        address lastIndexAddress = userIndex[lastIndex];
+        userIndex[removeIndex] = lastIndexAddress;
+        userEntries[lastIndexAddress].index = removeIndex;
+        delete userEntries[_address];
+        if (userIndex.length > 0) {
+          userIndex.length--;
+        }
+    }
+
 
     // function deregisterUser(uint _id) public returns (bool) {
     //     require(users[_id].userAddress == msg.sender);        
@@ -528,8 +544,59 @@ contract MeetupBase is MeetupAccessControl {
 
         // deduct deposit
         // addressToPoints[msg.sender] = addressToPoints[msg.sender] - 50;
-
     }
+
+
+    // function deregisterForMeetup(uint _meetupId)
+    //     public                
+    //     // returns (bool)
+    // {
+    //     require(userEntries[msg.sender].exists);
+        
+    //     Meetup storage _meetup = meetups[_meetupId];
+
+    //     // Can't join a meetup that has already started.
+    //     require(now < _meetup.startTime);
+
+    //     uint occupiedCapacity = sub(_meetup.maxCapacity, _meetup.remainingCapacity);
+
+    //     // Can't join twice
+    //     for (uint i = 0; i < occupiedCapacity; i++) {
+    //         if (_meetup.registrationList[i] == msg.sender) {
+    //             revert();
+    //         }
+    //     }
+
+    //     for (i = 0; i < _meetup.waitingList.length; i++) {
+    //         if (_meetup.waitingList[i] == msg.sender) {
+    //             revert();
+    //         }
+    //     }      
+
+    //     // Check if there is any capacity remaining
+    //     if (_meetup.remainingCapacity > 0) {
+    //       // Register user for the meetup event 
+    //       _meetup.registrationList[occupiedCapacity] = msg.sender;
+
+    //       // Reduce the capacity by 1
+    //       _meetup.remainingCapacity = sub(_meetup.remainingCapacity, 1);
+
+    //     } else {
+
+    //       // If there is no capacity remaining, join the waiting list
+    //       _meetup.waitingList.push(msg.sender);
+
+    //     }
+
+
+    //     // Broadcast the updated event data
+    //     emit MeetupEventUpdated(_meetup.startTime, _meetup.maxCapacity, 
+    //       _meetup.remainingCapacity, _meetup.topic, _meetup.waitingList.length);
+
+    //     // deduct deposit
+    //     // addressToPoints[msg.sender] = addressToPoints[msg.sender] - 50;
+    // }
+    
 
     // function leaveNextMeetup ()
     //     public           

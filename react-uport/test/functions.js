@@ -611,4 +611,17 @@ function getMeetupDetails(i) {
 }
 
 
+//  Print out user info
+function printUsers() {
+  for (i = 0; i < 7; i++) {     
+    userAddress = meetupBase.userIndex(i);
 
+    console.log("RESULT: " + i + 
+              " | Address: " + userAddress +
+              " | Exists: " + meetupBase.getUserData(userAddress)[0] +
+              " | Index: " + meetupBase.getUserData(userAddress)[1] +
+              " | Name: "+web3.toAscii(meetupBase.getUserData(userAddress)[2])+
+              " | Creation Time: " + timestampToStr(meetupBase.getUserData(userAddress)[3])
+              );
+    }
+}
