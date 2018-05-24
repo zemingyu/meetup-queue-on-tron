@@ -124,8 +124,8 @@ class Contractcallbutton extends Component {
 		}
 
 		var send = '';
-		if (!this.state.is_view_only){
-			//send = ' {from: "'+web3.eth.accounts[0] +'", gas:4000000}, ';
+		if (!this.state.is_view_only || !web3.currentProvider.isMetaMask){
+			send = ' {from: "'+web3.eth.accounts[0] +'", gas:4000000}, ';
 		}
 		
 		var s = ('this.state.sminst[name]( ' + sa + send + ' function(e, r){ this_st.cb(this_st, e, r) });');
@@ -201,9 +201,8 @@ class Contractcallbutton extends Component {
 
 				{(this.state.is_success && this.state.trans_hash)?  "Success:":"" }
 					
-				{this.state.is_success && this.state.trans_hash != '' && this.state.trans_hash != 'Error'?
-					<a href={"https://rinkeby.etherscan.io/tx/"+this.state.trans_hash}>
-						https://rinkeby.etherscan.io/tx/{this.state.trans_hash}</a>:''
+				{web3.currentProvider.isMetaMask && this.state.is_success && this.state.trans_hash != '' && this.state.trans_hash != 'Error'?
+					<a href={"https://rinkeby.etherscan.io/tx/"+this.state.trans_hash}>https://rinkeby.etherscan.io/tx/{this.state.trans_hash}</a>:this.state.trans_hash
 				}
 
 				</Table.Cell>
